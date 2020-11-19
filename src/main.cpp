@@ -7,18 +7,19 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 Adafruit_BMP280 bmp;
 DHT dht(8, DHT22);
 
-const char ccedil[8] PROGMEM = {0x00, 0x00, 0x0F, 0x10, 0x10, 0x10, 0x0F, 0x02}; // Custom char 1 (ç)
-const char atilde[8] PROGMEM = {0x0E, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F, 0x00}; // Custom char 2 (ã)
-const char oacute[8] PROGMEM = {0x02, 0x04, 0x0E, 0x11, 0x11, 0x11, 0x0E, 0x00}; // Custom char 3 (ó)
-const char degree[8] PROGMEM = {0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00}; // Custom char 4 (°)
+const char ccedil[8] PROGMEM = {0x00, 0x00, 0x0F, 0x10, 0x10, 0x10, 0x0F, 0x02}; // Caractere customizado 1 (ç)
+const char atilde[8] PROGMEM = {0x0E, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F, 0x00}; // Caractere customizado 2 (ã)
+const char oacute[8] PROGMEM = {0x02, 0x04, 0x0E, 0x11, 0x11, 0x11, 0x0E, 0x00}; // Caractere customizado 3 (ó)
+const char degree[8] PROGMEM = {0x06, 0x09, 0x09, 0x06, 0x00, 0x00, 0x00, 0x00}; // Caractere customizado 4 (°)
 
 const uint16_t screenTime = 2000;
-void intro();
+
+void intro ();
 
 void setup()
 {
+    pinMode(A0, INPUT);
     pinMode(A1, INPUT);
-    pinMode(A2, INPUT);
 
     analogReference(INTERNAL);
 
@@ -85,9 +86,9 @@ float getTemperature () {
     int B_LM33;
     float U_LM33, T_LM33;
 
-    B_LM33 = analogRead(A1);          // Leitura digital do valor analógico do sensor
+    B_LM33 = analogRead(A1);            // Leitura digital do valor analógico do sensor
     U_LM33 = B_LM33 * 1.1 / (1024 - 1); // Conversão da leitura para a tensão no sensor (em V)
-    T_LM33 = U_LM33 * 100 + 0;          // Conversão da tensão no sensor para temperatura (em ºC)
+    T_LM33 = U_LM33 * 101.007 - 0.0001; // Conversão da tensão no sensor para temperatura (em ºC)
 
     return T_LM33;
 }
@@ -105,30 +106,27 @@ void printTemperature (float temperature = getTemperature()) {
 }
 
 float getHumidity () {
-    float Ur_DHT22, T_DHT22;
+    float Ur_DHT22, Ur_calib;
 
-    T_DHT22  = dht.readTemperature(); // leitura da temperatura no sensor (em °C)
-    Ur_DHT22 = dht.readHumidity();    // Leitura da umidade relativa no sensor (em %)
+    Ur_DHT22 = dht.readHumidity();     // Leitura da umidade relativa no sensor (em %)
+    Ur_calib = Ur_DHT22 * 0.939 - 0.4; // Leitura calibrada da umidade relativa no sensor (em %)
 
-    return Ur_DHT22;
+    return Ur_calib;
 }
 
 void printHumidity (float humidity = getHumidity()) {
     lcd.clear();
-    lcd.print("Humidade");
+    lcd.print("Umidade");
     lcd.setCursor(0, 1);
     lcd.print(humidity);
     lcd.print("%");
 
-    Serial.print("Humidade: ");
+    Serial.print("Umidade: ");
     Serial.println(humidity);
 }
 
 float getPressure () {
-    float P_BMP280, T_BMP280;
-
-    T_BMP280 = bmp.readTemperature();    // Leitura da temperatura no sensor (em °C)
-    P_BMP280 = bmp.readPressure() / 100; // Leitura da pressão no sensor (em hPA)
+    float P_BMP280 = bmp.readPressure() / 100; // Leitura da pressão no sensor (em hPA)
 
     return P_BMP280;
 }
@@ -150,10 +148,10 @@ float getLuminosity () {
     int B_LDR;
     float U_LDR, R_LDR, L_LDR;
 
-    B_LDR = analogRead(A2);                     // Leitura digital do valor analógico do sensor
-    U_LDR = B_LDR * 5 / (1024 - 1);             // Conversão da leitura para a tensão no sensor (em V)
+    B_LDR = analogRead(A0);                     // Leitura digital do valor analógico do sensor
+    U_LDR = B_LDR * 1.1 / (1024 - 1);           // Conversão da leitura para a tensão no sensor (em V)
     R_LDR = 100000 * U_LDR / (5 - U_LDR);       // Conversão da tensão no sensor para a resistência do sensor (em Ohms)
-    L_LDR = pow(10, 7.098 - 1.4 * log10(R_LDR)); // COnversão da resistência do sensor para a luminosidade no sensor (em Lux)
+    L_LDR = pow(10, 6.5 - 1.25 * log10(R_LDR)); // COnversão da resistência do sensor para a luminosidade no sensor (em Lux)
 
     return L_LDR;
 }
@@ -163,7 +161,7 @@ void printLuminosity (float luminosity = getLuminosity()) {
     lcd.print("Luminosidade");
     lcd.setCursor(0, 1);
     lcd.print(luminosity);
-    lcd.print(" Lux");
+    lcd.print(" lx");
 
     Serial.print("Luminosidade: ");
     Serial.println(luminosity);

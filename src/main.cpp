@@ -41,9 +41,9 @@ void setup()
 
 void intro () {
     lcd.clear();
-    lcd.print("Engenaria Turma");
+    lcd.print("Engenharia Turma");
     lcd.setCursor(0, 1);
-    lcd.print("Insper    1B");
+    lcd.print("Insper     1B");
     Serial.println("Engenharia Insper");
     Serial.println("Turma 1B");
     delay(screenTime);
